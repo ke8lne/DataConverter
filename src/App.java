@@ -4,6 +4,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.KeyAdapter;
 import java.lang.reflect.Method;
+import java.text.DecimalFormat;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
 import java.util.List;
@@ -33,11 +34,36 @@ public class App extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setDefaultLookAndFeelDecorated(true);
         mainOpt.addActionListener(event -> {
-            menu1.setModel(new DefaultComboBoxModel<String>(options.get(mainOpt.getSelectedIndex()).toArray(new String[] {})));
-            menu2.setModel(new DefaultComboBoxModel<String>(options.get(mainOpt.getSelectedIndex()).toArray(new String[] {})));
+            menu1.setModel(
+                    new DefaultComboBoxModel<String>(options.get(mainOpt.getSelectedIndex()).toArray(new String[] {})));
+            menu2.setModel(
+                    new DefaultComboBoxModel<String>(options.get(mainOpt.getSelectedIndex()).toArray(new String[] {})));
             menu2.setSelectedIndex(1);
             field1.setText(null);
             field2.setText(null);
+            field1.requestFocus();
+        });
+        menu1.addItemListener(event -> {
+            if (event.getStateChange() == ItemEvent.DESELECTED)
+                prevOpt1Index = manager.typesList.get(mainOpt.getSelectedIndex()).indexOf(event.getItem());
+            else if (event.getStateChange() == ItemEvent.SELECTED)
+                if (menu1.getSelectedIndex() == menu2.getSelectedIndex())
+                    menu2.setSelectedIndex(prevOpt1Index);
+                else
+                    updateInteraction();
+            field1.requestFocus();
+        });
+        menu2.addItemListener(event -> {
+            if (event.getStateChange() == ItemEvent.DESELECTED)
+                prevOpt2Index = manager.typesList.get(mainOpt.getSelectedIndex()).indexOf(event.getItem());
+            else if (event.getStateChange() == ItemEvent.SELECTED)
+                if (menu2.getSelectedIndex() == menu1.getSelectedIndex()) {
+                    menu1.setSelectedIndex(prevOpt2Index);
+                    String oldVal = field2.getText();
+                    field2.setText(field1.getText());
+                    field1.setText(oldVal);
+                } else
+                    updateInteraction();
             field1.requestFocus();
         });
         add(mainOpt);
@@ -45,32 +71,34 @@ public class App extends JFrame {
         add(menu1);
         add(field1);
         add(menu2);
-        menu1.addItemListener(event -> {
-            if (event.getStateChange() == ItemEvent.DESELECTED)
-                prevOpt1Index = manager.typesList.get(mainOpt.getSelectedIndex()).indexOf(event.getItem());
-            else if (event.getStateChange() == ItemEvent.SELECTED)
-                if (menu1.getSelectedIndex() == menu2.getSelectedIndex())
-                    menu2.setSelectedIndex(prevOpt1Index);
-            field1.requestFocus();
-        });
-        menu2.addItemListener(event -> {
-            if (event.getStateChange() == ItemEvent.DESELECTED)
-                prevOpt2Index = manager.typesList.get(mainOpt.getSelectedIndex()).indexOf(event.getItem());
-            else if (event.getStateChange() == ItemEvent.SELECTED)
-                if (menu2.getSelectedIndex() == menu1.getSelectedIndex())
-                    menu1.setSelectedIndex(prevOpt2Index);
-            field1.requestFocus();
-        });
+        add(field2);
         field1.getActionMap().get(DefaultEditorKit.deletePrevCharAction).setEnabled(false);
         field1.setEditable(false);
         field1.setFocusable(true);
         field1.requestFocus();
         field2.setEditable(false);
-        add(field2);
+        field2.setFocusable(false);
         setFocusTraversalKeysEnabled(false);
         field1.addKeyListener(new KeyAdapter() {
             public void keyTyped(KeyEvent e) {
-                updateInteraction(e);
+                char in = e.getKeyChar();
+                if (in == KeyEvent.VK_ENTER) {
+                    updateInteraction();
+                    e.consume();
+                } else if (in == KeyEvent.VK_BACK_SPACE) {
+                    field1.setText(field1.getText().length() == 0 ? null
+                            : field1.getText().substring(0, (field1.getText().length() - 1)));
+                    if (field1.getText().length() > 0)
+                        updateInteraction();
+                    else if (field1.getText().length() == 0)
+                        field2.setText(null);
+                } else if (in == '.' && field1.getText().contains("."))
+                    e.consume();
+                else if ((in >= '0' && in <= '9') || in == '.') {
+                    field1.setText(field1.getText().length() == 0 && in == '.' ? "0." : field1.getText() + in);
+                    updateInteraction();
+                } else
+                    e.consume();
             }
         });
         addWindowListener(new WindowAdapter() {
@@ -115,43 +143,31 @@ public class App extends JFrame {
         prevOpt2Index = menu2.getSelectedIndex();
     }
 
-    public void updateInteraction(KeyEvent event) {
-        char in = event.getKeyChar();
-        if (in == KeyEvent.VK_BACK_SPACE)
-            field1.setText(field1.getText().length() == 0 ? null : field1.getText().substring(0, (field1.getText().length() - 1)));
-        else if (in == '.' && field1.getText().contains("."))
-            event.consume();
-        else if ((in >= '0' && in <= '9') || in == '.') {
-            field1.setText(field1.getText() + in);
-            double value = 0, result = 0;
-            int mainOptIndex = mainOpt.getSelectedIndex();
-            int opt1 = menu1.getSelectedIndex(), opt2 = menu2.getSelectedIndex();
-            try {
-                value = Double.valueOf(field1.getText().trim());
-            }
-            catch (NumberFormatException err) {
-                return;
-            }
-
-            if (opt1 == opt2)
-                result = value;
-            else {
-                result = convert(manager.converters[mainOptIndex], mainOptIndex, opt1, opt2, value);
-            }
-            field2.setText(String.format("%,f", result));
+    public void updateInteraction() {
+        double value = 0, result = 0; 
+        int mainOptIndex = mainOpt.getSelectedIndex();
+        int opt1 = menu1.getSelectedIndex(), opt2 = menu2.getSelectedIndex();
+        try {
+            value = Double.valueOf(field1.getText().trim().replaceAll(",", ""));
+        } catch (NumberFormatException err) {
+            return;
         }
+        if (opt1 == opt2)
+            result = value;
         else
-            event.consume();
+            result = convert(manager.converters[mainOptIndex], mainOptIndex, opt1, opt2, value);
+        field2.setText(new DecimalFormat("#,###.################").format(result));
     }
 
     static double convert(Object converter, int converterIndex, int fromIndex, int toIndex, double value) {
         double result = 0;
         try {
-            Method base = converter.getClass().getMethod("from" + options.get(converterIndex).get(fromIndex), double.class);
+            Method base = converter.getClass().getMethod("from" + options.get(converterIndex).get(fromIndex),
+                    double.class);
             Object resolve = base.invoke(converter, value);
-            result = (double) resolve.getClass().getMethod("to" + options.get(converterIndex).get(toIndex)).invoke(resolve);
-        }
-        catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            result = (double) resolve.getClass().getMethod("to" + options.get(converterIndex).get(toIndex))
+                    .invoke(resolve);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
         }
         return result;
