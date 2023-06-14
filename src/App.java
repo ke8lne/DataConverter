@@ -173,6 +173,7 @@ public class App extends JFrame {
                 mainOpt.setBorder(new LineBorder(Color.DARK_GRAY));
                 mainOpt.setBackground(new Color(200, 200, 200));
                 mainOpt.setForeground(Color.BLACK);
+                field1.setBackground(new Color(230, 230, 230));
             }
             // Dark
             else if (theme == 1) {
@@ -183,6 +184,7 @@ public class App extends JFrame {
                 mainOpt.setBorder(new LineBorder(Color.BLACK));
                 mainOpt.setBackground(Color.DARK_GRAY);
                 mainOpt.setForeground(Color.WHITE);
+                field1.setBackground(mainOpt.getBackground());
             }
             keypadWindow.switchTheme(theme);
             menu1.setBorder(mainOpt.getBorder());
@@ -193,8 +195,7 @@ public class App extends JFrame {
             menu2.setForeground(mainOpt.getForeground());
             field1.setForeground(mainOpt.getForeground());
             field2.setForeground(mainOpt.getForeground());
-            field1.setBackground(mainOpt.getBackground());
-            field2.setBackground(mainOpt.getBackground());
+            field2.setBackground(field1.getBackground());
         }
         catch (UnsupportedLookAndFeelException e) {
             return;

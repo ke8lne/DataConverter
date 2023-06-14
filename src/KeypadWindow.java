@@ -1,14 +1,14 @@
 import java.awt.event.ActionListener;
 import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
 import javax.swing.JButton;
 import java.awt.GridLayout;
 import java.awt.Dimension;
-import java.awt.Font;
+import java.awt.Component;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import java.awt.Color;
+import java.awt.Font;
 
 public class KeypadWindow extends JFrame {
 	JPanel btns = new JPanel(new GridLayout(4, 3));
@@ -41,7 +41,7 @@ public class KeypadWindow extends JFrame {
 		if (theme == 0) {
 			for (Component btn : btns.getComponents()) {
 				btn.setForeground(Color.BLACK);
-				btn.setBackground(new Color(200, 200,200));
+				btn.setBackground(new Color(200, 200, 200));
 			}
 			SwingUtilities.updateComponentTreeUI(this);
 		}
