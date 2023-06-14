@@ -1,16 +1,13 @@
 import java.lang.reflect.InvocationTargetException;
-import javax.swing.text.DefaultEditorKit;
-import com.formdev.flatlaf.FlatDarculaLaf;
-import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.FlatLightLaf;
-import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
+import javax.swing.text.DefaultEditorKit;
+import javax.swing.border.LineBorder;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.awt.event.*;
 import java.util.List;
 import javax.swing.*;
-import javax.swing.border.LineBorder;
 import java.awt.*;
 
 public class App extends JFrame {
