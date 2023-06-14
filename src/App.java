@@ -12,23 +12,23 @@ import java.awt.*;
 
 public class App extends JFrame {
     static Types manager = new Types();
-    static List<String> mainOptions = manager.namesList;
-    static List<List<String>> options = manager.typesList;
-    static Font font = new Font("Consolas", 1, 16);
-    static JComboBox<String> mainOpt = new JComboBox<String>(mainOptions.toArray(new String[] {}));
-    static JComboBox<String> menu1 = new JComboBox<String>();
-    static JComboBox<String> menu2 = new JComboBox<String>();
-    static JTextField field1 = new JTextField();
-    static JTextField field2 = new JTextField();
-    static JLabel title = new JLabel("", SwingConstants.CENTER);
-    static JButton keypadBtn = new JButton(new ImageIcon("assets/numpad.png"));
-    static JButton switchBtn = new JButton();
+    List<String> mainOptions = manager.namesList;
+    List<List<String>> options = manager.typesList;
+    Font font = new Font("Consolas", 1, 16);
+    JComboBox<String> mainOpt = new JComboBox<String>(mainOptions.toArray(new String[] {}));
+    JComboBox<String> menu1 = new JComboBox<String>();
+    JComboBox<String> menu2 = new JComboBox<String>();
+    JTextField field1 = new JTextField();
+    JTextField field2 = new JTextField();
+    JLabel title = new JLabel("", SwingConstants.CENTER);
+    JButton keypadBtn = new JButton(new ImageIcon(getClass().getResource("numpad.png")));
+    JButton switchBtn = new JButton();
     public KeypadWindow keypadWindow = new KeypadWindow(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
             keypadEvent(e);
         }
     });
-    static int prevOpt1Index = 0, prevOpt2Index = 0;
+    int prevOpt1Index = 0, prevOpt2Index = 0;
     int theme = 0; // 0 - Light | 1 - Dark
 
     App() {
@@ -37,7 +37,7 @@ public class App extends JFrame {
         }
         catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
         }
-        setIconImage(new ImageIcon("assets/icon.png").getImage());
+        setIconImage(new ImageIcon(getClass().getResource("icon.png")).getImage());
         setTitle("DataConverter - Unit Convertion Tool");
         title.setText("Select a Unit:");
         setSize(400, 355);
@@ -125,7 +125,7 @@ public class App extends JFrame {
         setVisible(true);
     }
 
-    public static void setComponents() {
+    public void setComponents() {
         DefaultListCellRenderer itemsRenderer = new DefaultListCellRenderer();
         itemsRenderer.setHorizontalAlignment(DefaultListCellRenderer.CENTER);
         title.setFont(font);
@@ -166,7 +166,7 @@ public class App extends JFrame {
         try {
             // Light
             if (theme == 0) {
-                switchBtn.setIcon(new ImageIcon("assets/dark.png"));
+                switchBtn.setIcon(new ImageIcon(getClass().getResource("dark.png")));
                 UIManager.setLookAndFeel(new FlatMacLightLaf());
                 getContentPane().setBackground(Color.LIGHT_GRAY);
                 title.setForeground(Color.BLACK);
@@ -176,7 +176,7 @@ public class App extends JFrame {
             }
             // Dark
             else if (theme == 1) {
-                switchBtn.setIcon(new ImageIcon("assets/light.png"));
+                switchBtn.setIcon(new ImageIcon(getClass().getResource("light.png")));
                 UIManager.setLookAndFeel(new FlatMacDarkLaf());
                 getContentPane().setBackground(new Color(66, 69, 73));
                 title.setForeground(Color.WHITE);
@@ -266,7 +266,7 @@ public class App extends JFrame {
         field2.setText(new DecimalFormat("#,###.####################").format(result));
     }
 
-    static double convert(Object converter, int converterIndex, int fromIndex, int toIndex, double value) {
+    public double convert(Object converter, int converterIndex, int fromIndex, int toIndex, double value) {
         double result = 0;
         try {
             Method base = converter.getClass().getMethod("from" + options.get(converterIndex).get(fromIndex), double.class);

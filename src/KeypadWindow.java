@@ -41,7 +41,7 @@ public class KeypadWindow extends JFrame {
 		if (theme == 0) {
 			for (Component btn : btns.getComponents()) {
 				btn.setForeground(Color.BLACK);
-				btn.setBackground(new Color(200, 200, 200));
+				btn.setBackground(new Color(200, 200,200));
 			}
 			SwingUtilities.updateComponentTreeUI(this);
 		}
