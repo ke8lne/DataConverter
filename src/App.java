@@ -1,33 +1,46 @@
 import java.lang.reflect.InvocationTargetException;
 import javax.swing.text.DefaultEditorKit;
-import com.digidemic.unitof.S;
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
+import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
-import java.util.List;
 import java.awt.event.*;
+import java.util.List;
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 
 public class App extends JFrame {
     static Types manager = new Types();
     static List<String> mainOptions = manager.namesList;
     static List<List<String>> options = manager.typesList;
-    static Font font = new Font("Consolas", 1, 13);
+    static Font font = new Font("Consolas", 1, 16);
     static JComboBox<String> mainOpt = new JComboBox<String>(mainOptions.toArray(new String[] {}));
     static JComboBox<String> menu1 = new JComboBox<String>();
     static JComboBox<String> menu2 = new JComboBox<String>();
     static JTextField field1 = new JTextField();
     static JTextField field2 = new JTextField();
     static JLabel title = new JLabel("", SwingConstants.CENTER);
-    static JButton keypadBtn = new JButton("Keypad");
+    static JButton keypadBtn = new JButton(new ImageIcon("assets/numpad.png"));
+    static JButton switchBtn = new JButton();
     public KeypadWindow keypadWindow = new KeypadWindow(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
             keypadEvent(e);
         }
     });
     static int prevOpt1Index = 0, prevOpt2Index = 0;
+    int theme = 0; // 0 - Light | 1 - Dark
 
     App() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        }
+        catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+        }
+        setIconImage(new ImageIcon("assets/icon.png").getImage());
         setTitle("DataConverter - Unit Convertion Tool");
         title.setText("Select a Unit:");
         setSize(400, 355);
@@ -89,7 +102,7 @@ public class App extends JFrame {
             }
         });
         keypadBtn.addActionListener(event -> {
-            keypadWindow.setVisible(true);
+            keypadWindow.setVisible(!keypadWindow.isVisible());
             keypadWindow.addKeyListener(new KeyAdapter() {
                 public void keyTyped(KeyEvent e) {
                     keyEvent(e);
@@ -97,6 +110,11 @@ public class App extends JFrame {
             });
             requestFocus(true);
         });
+        switchBtn.addActionListener(event -> {
+            theme = theme == 0 ? 1 : 0;
+            switchColor();
+        });
+        switchColor();
         setComponents();
         add(mainOpt);
         add(title, BorderLayout.CENTER);
@@ -105,8 +123,8 @@ public class App extends JFrame {
         add(menu2);
         add(field2);
         add(keypadBtn);
+        add(switchBtn);
         setLayout(null);
-        getContentPane().setBackground(Color.LIGHT_GRAY);
         setVisible(true);
     }
 
@@ -117,27 +135,73 @@ public class App extends JFrame {
         title.setBounds(40, 20, 300, 20);
         mainOpt.setSelectedIndex(0);
         mainOpt.setMaximumRowCount(8);
-        mainOpt.setBounds(40, 40, 300, 20);
+        mainOpt.setBounds(40, 40, 300, 30);
         mainOpt.setRenderer(itemsRenderer);
         menu1.setSelectedIndex(0);
         menu1.setMaximumRowCount(8);
-        menu1.setBounds(65, 100, 250, 20);
+        menu1.setBounds(65, 100, 250, 30);
         menu1.setRenderer(itemsRenderer);
         field1.setHorizontalAlignment(JTextField.CENTER);
         field1.setFont(font);
-        field1.setBounds(65, 123, 250, 40);
+        field1.setBounds(65, 133, 250, 40);
         menu2.setSelectedIndex(1);
         menu2.setMaximumRowCount(8);
-        menu2.setBounds(65, 190, 250, 20);
+        menu2.setBounds(65, 190, 250, 30);
         menu2.setRenderer(itemsRenderer);
         field2.setHorizontalAlignment(JTextField.CENTER);
         field2.setFont(font);
-        field2.setBounds(65, 213, 250, 40);
-        keypadBtn.setFont(new Font("Calibri", 1, 11));
-        keypadBtn.setBounds(300, 275, 68, 30);
+        field2.setBounds(65, 223, 250, 40);
+        keypadBtn.setBackground(null);
+        keypadBtn.setBounds(330, 270, 40, 40);
+        keypadBtn.setBorderPainted(false);
         keypadBtn.setFocusable(false);
+        keypadBtn.setFocusPainted(false);
+        switchBtn.setBackground(null);
+        switchBtn.setBounds(10, 270, 40, 40);
+        switchBtn.setBorderPainted(false);
+        switchBtn.setFocusable(false);
+        switchBtn.setFocusPainted(false);
         prevOpt1Index = menu1.getSelectedIndex();
         prevOpt2Index = menu2.getSelectedIndex();
+    }
+
+    public void switchColor() {
+        try {
+            // Light
+            if (theme == 0) {
+                switchBtn.setIcon(new ImageIcon("assets/dark.png"));
+                UIManager.setLookAndFeel(new FlatMacLightLaf());
+                getContentPane().setBackground(Color.LIGHT_GRAY);
+                title.setForeground(Color.BLACK);
+                mainOpt.setBorder(new LineBorder(Color.DARK_GRAY));
+                mainOpt.setBackground(new Color(200, 200, 200));
+                mainOpt.setForeground(Color.BLACK);
+            }
+            // Dark
+            else if (theme == 1) {
+                switchBtn.setIcon(new ImageIcon("assets/light.png"));
+                UIManager.setLookAndFeel(new FlatMacDarkLaf());
+                getContentPane().setBackground(new Color(66, 69, 73));
+                title.setForeground(Color.WHITE);
+                mainOpt.setBorder(new LineBorder(Color.BLACK));
+                mainOpt.setBackground(Color.DARK_GRAY);
+                mainOpt.setForeground(Color.WHITE);
+            }
+            keypadWindow.switchTheme(theme);
+            menu1.setBorder(mainOpt.getBorder());
+            menu2.setBorder(mainOpt.getBorder());
+            menu1.setBackground(mainOpt.getBackground());
+            menu2.setBackground(mainOpt.getBackground());
+            menu1.setForeground(mainOpt.getForeground());
+            menu2.setForeground(mainOpt.getForeground());
+            field1.setForeground(mainOpt.getForeground());
+            field2.setForeground(mainOpt.getForeground());
+            field1.setBackground(mainOpt.getBackground());
+            field2.setBackground(mainOpt.getBackground());
+        }
+        catch (UnsupportedLookAndFeelException e) {
+            return;
+        }
     }
 
     public void keypadEvent(ActionEvent e) {
@@ -180,8 +244,8 @@ public class App extends JFrame {
             e.consume();
         else if (in == '0' && field1.getText().length() == 0)
             e.consume();
-        else if ((in >= '0' && in <= '9') || in == '.') {
-            field1.setText(field1.getText().length() == 0 && in == '.' ? "0." : field1.getText() + in);
+        else if ((in >= '0' && in <= '9') || in == '.' || in == 'e') {
+            field1.setText(field1.getText().length() == 0 && (in == '.' || in == 'e') ? "0." : field1.getText() + in);
             updateInteraction();
         }
         else
@@ -202,7 +266,7 @@ public class App extends JFrame {
             result = value;
         else
             result = convert(manager.converters[mainOptIndex], mainOptIndex, opt1, opt2, value);
-        field2.setText(new DecimalFormat("#,###.###############").format(result));
+        field2.setText(new DecimalFormat("#,###.####################").format(result));
     }
 
     static double convert(Object converter, int converterIndex, int fromIndex, int toIndex, double value) {
