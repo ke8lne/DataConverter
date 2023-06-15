@@ -5,13 +5,15 @@ import javax.swing.text.DefaultEditorKit;
 import javax.swing.border.LineBorder;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
+import KentHipos.Kensoft;
 import java.awt.event.*;
 import java.util.List;
 import javax.swing.*;
 import java.awt.*;
 
 public class App extends JFrame {
-    static Types manager = new Types();
+    JPanel mainPanel = new JPanel(), menu = new JPanel(new GridLayout(5, 1));
+    Types manager = new Types();
     List<String> mainOptions = manager.namesList;
     List<List<String>> options = manager.typesList;
     Font font = new Font("Consolas", 1, 16);
@@ -22,8 +24,8 @@ public class App extends JFrame {
     JTextField field2 = new JTextField();
     JLabel title = new JLabel("", SwingConstants.CENTER);
     JButton keypadBtn = new JButton(new ImageIcon(getClass().getResource("numpad.png")));
-    JButton switchBtn = new JButton();
-    public KeypadWindow keypadWindow = new KeypadWindow(new ActionListener() {
+    JButton switchBtn = new JButton(), menuButton = new JButton(new ImageIcon(getClass().getResource("menu.png")));
+    KeypadWindow keypadWindow = new KeypadWindow(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
             keypadEvent(e);
         }
@@ -32,11 +34,6 @@ public class App extends JFrame {
     int theme = 0; // 0 - Light | 1 - Dark
 
     App() {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        }
-        catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
-        }
         setIconImage(new ImageIcon(getClass().getResource("icon.png")).getImage());
         setTitle("DataConverter - Unit Convertion Tool");
         title.setText("Select a Unit:");
@@ -111,16 +108,21 @@ public class App extends JFrame {
             theme = theme == 0 ? 1 : 0;
             switchColor();
         });
+        menuButton.addActionListener(event -> menuAction());
+        menuAction();
         switchColor();
         setComponents();
-        add(mainOpt);
-        add(title, BorderLayout.CENTER);
-        add(menu1);
-        add(field1);
-        add(menu2);
-        add(field2);
-        add(keypadBtn);
-        add(switchBtn);
+        mainPanel.add(mainOpt);
+        mainPanel.add(title, BorderLayout.CENTER);
+        mainPanel.add(menu1);
+        mainPanel.add(field1);
+        mainPanel.add(menu2);
+        mainPanel.add(field2);
+        menu.add(keypadBtn);
+        menu.add(switchBtn);
+        add(menuButton);
+        add(mainPanel);
+        add(menu);
         setLayout(null);
         setVisible(true);
     }
@@ -148,24 +150,61 @@ public class App extends JFrame {
         field2.setHorizontalAlignment(JTextField.CENTER);
         field2.setFont(font);
         field2.setBounds(65, 223, 250, 40);
+        keypadBtn.setText("Numpad");
         keypadBtn.setBackground(null);
-        keypadBtn.setBounds(330, 270, 40, 40);
-        keypadBtn.setBorderPainted(false);
         keypadBtn.setFocusable(false);
         keypadBtn.setFocusPainted(false);
         switchBtn.setBackground(null);
-        switchBtn.setBounds(10, 270, 40, 40);
-        switchBtn.setBorderPainted(false);
         switchBtn.setFocusable(false);
         switchBtn.setFocusPainted(false);
+        menuButton.setBackground(null);
+        menuButton.setBounds(3, 275, 40, 40);
+        menuButton.setBorderPainted(false);
+        menuButton.setFocusable(false);
+        menuButton.setFocusPainted(false);
+        mainPanel.setLayout(null);
+        mainPanel.setSize(getWidth(), getHeight());
+        mainPanel.setVisible(true);
+        menu.setSize(getWidth() - 15, getHeight());
+        menu.setVisible(false);
         prevOpt1Index = menu1.getSelectedIndex();
         prevOpt2Index = menu2.getSelectedIndex();
     }
 
+    public void menuAction() {
+        // Visible
+        if (menu.isVisible()) {
+            field1.setText(null);
+            field2.setText(null);
+            mainPanel.setBounds(-400, mainPanel.getY(), mainPanel.getWidth(), mainPanel.getHeight());
+            menu.update(menu.getGraphics());
+            new Kensoft().jPanelXRight(mainPanel.getX(), 0, 3, 6, mainPanel);
+            mainPanel.update(mainPanel.getGraphics());
+            menuButton.setIcon(new ImageIcon(getClass().getResource("menu.png")));
+            menu.setVisible(false);
+            mainPanel.setVisible(true);
+        }
+        else {
+            menu.setBounds(-400, menu.getY(), menu.getWidth(), menu.getHeight());
+            menu.update(menu.getGraphics());
+            new Kensoft().jPanelXRight(menu.getX(), 0, 3, 6, menu);
+            menu.update(menu.getGraphics());
+            menuButton.setIcon(new ImageIcon(getClass().getResource("cancel.png")));
+            menu.setVisible(true);
+            mainPanel.setVisible(false);
+        }
+        field1.requestFocus();
+    }
+
     public void switchColor() {
         try {
+            menu.setBounds(-400, menu.getY(), menu.getWidth(), menu.getHeight());
+            menu.update(menu.getGraphics());
+            new Kensoft().jPanelXRight(menu.getX(), 0, 1, 6, menu);
+            menu.update(menu.getGraphics());
             // Light
             if (theme == 0) {
+                switchBtn.setText("Dark Mode");
                 switchBtn.setIcon(new ImageIcon(getClass().getResource("dark.png")));
                 UIManager.setLookAndFeel(new FlatMacLightLaf());
                 getContentPane().setBackground(Color.LIGHT_GRAY);
@@ -174,19 +213,30 @@ public class App extends JFrame {
                 mainOpt.setBackground(new Color(200, 200, 200));
                 mainOpt.setForeground(Color.BLACK);
                 field1.setBackground(new Color(230, 230, 230));
+                for (int i = 66; i < 200; i++) {
+                    menu.setBackground(new Color(i, i, i));
+                    menu.update(menu.getGraphics());
+                }
             }
             // Dark
             else if (theme == 1) {
+                switchBtn.setText("Light Mode");
                 switchBtn.setIcon(new ImageIcon(getClass().getResource("light.png")));
                 UIManager.setLookAndFeel(new FlatMacDarkLaf());
-                getContentPane().setBackground(new Color(66, 69, 73));
+                getContentPane().setBackground(new Color(66, 66, 66));
                 title.setForeground(Color.WHITE);
                 mainOpt.setBorder(new LineBorder(Color.BLACK));
                 mainOpt.setBackground(Color.DARK_GRAY);
                 mainOpt.setForeground(Color.WHITE);
                 field1.setBackground(mainOpt.getBackground());
+                for (int i = 200; i >= 66; i--) {
+                    menu.setBackground(new Color(i, i, i));
+                    menu.update(menu.getGraphics());
+                }
             }
             keypadWindow.switchTheme(theme);
+            mainPanel.setBackground(getContentPane().getBackground());
+            menu.setBorder(mainOpt.getBorder());
             menu1.setBorder(mainOpt.getBorder());
             menu2.setBorder(mainOpt.getBorder());
             menu1.setBackground(mainOpt.getBackground());
@@ -196,6 +246,8 @@ public class App extends JFrame {
             field1.setForeground(mainOpt.getForeground());
             field2.setForeground(mainOpt.getForeground());
             field2.setBackground(field1.getBackground());
+            keypadBtn.setForeground(mainOpt.getForeground());
+            switchBtn.setForeground(mainOpt.getForeground());
         }
         catch (UnsupportedLookAndFeelException e) {
             return;

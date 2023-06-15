@@ -1,5 +1,6 @@
 import java.awt.event.ActionListener;
 import javax.swing.SwingUtilities;
+import KentHipos.Kensoft;
 import java.awt.BorderLayout;
 import javax.swing.JButton;
 import java.awt.GridLayout;
@@ -38,17 +39,22 @@ public class KeypadWindow extends JFrame {
 	}
 
 	public void switchTheme(int theme) {
+		btns.setBounds(-400, btns.getY(), btns.getWidth(), btns.getHeight());
+		btns.update(btns.getGraphics());
+		new Kensoft().jPanelXRight(btns.getX(), 0, 1, 4, btns);
 		if (theme == 0) {
+			btns.update(btns.getGraphics());
 			for (Component btn : btns.getComponents()) {
-				btn.setForeground(Color.BLACK);
 				btn.setBackground(new Color(200, 200, 200));
+				btn.setForeground(Color.BLACK);
 			}
 			SwingUtilities.updateComponentTreeUI(this);
 		}
 		else if (theme == 1) {
 			for (Component btn : btns.getComponents()) {
+				btn.setBackground(new Color(66, 66, 66));
+				btn.update(btn.getGraphics());
 				btn.setForeground(Color.WHITE);
-				btn.setBackground(Color.DARK_GRAY);
 			}
 			SwingUtilities.updateComponentTreeUI(this);
 		}
