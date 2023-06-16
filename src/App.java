@@ -176,19 +176,15 @@ public class App extends JFrame {
         if (menu.isVisible()) {
             field1.setText(null);
             field2.setText(null);
-            mainPanel.setBounds(-400, mainPanel.getY(), mainPanel.getWidth(), mainPanel.getHeight());
-            menu.update(menu.getGraphics());
-            new Kensoft().jPanelXRight(mainPanel.getX(), 0, 3, 6, mainPanel);
-            mainPanel.update(mainPanel.getGraphics());
+            mainPanel.setBounds(mainPanel.getX(), -getHeight(), mainPanel.getWidth(), mainPanel.getHeight());
+            new Kensoft().jPanelYDown(mainPanel.getY(), 0, 3, 5, mainPanel);
             menuButton.setIcon(new ImageIcon(getClass().getResource("menu.png")));
             menu.setVisible(false);
             mainPanel.setVisible(true);
         }
         else {
-            menu.setBounds(-400, menu.getY(), menu.getWidth(), menu.getHeight());
-            menu.update(menu.getGraphics());
-            new Kensoft().jPanelXRight(menu.getX(), 0, 3, 6, menu);
-            menu.update(menu.getGraphics());
+            menu.setBounds(menu.getX(), getHeight(), menu.getWidth(), menu.getHeight());
+            new Kensoft().jPanelYUp(menu.getY(), 0, 3, 5, menu);
             menuButton.setIcon(new ImageIcon(getClass().getResource("cancel.png")));
             menu.setVisible(true);
             mainPanel.setVisible(false);
@@ -197,11 +193,9 @@ public class App extends JFrame {
     }
 
     public void switchColor() {
+        menu.setBounds(-getWidth(), menu.getY(), menu.getWidth(), menu.getHeight());
+        new Kensoft().jPanelXRight(menu.getX(), 0, 1, 6, menu);
         try {
-            menu.setBounds(-400, menu.getY(), menu.getWidth(), menu.getHeight());
-            menu.update(menu.getGraphics());
-            new Kensoft().jPanelXRight(menu.getX(), 0, 1, 6, menu);
-            menu.update(menu.getGraphics());
             // Light
             if (theme == 0) {
                 switchBtn.setText("Dark Mode");

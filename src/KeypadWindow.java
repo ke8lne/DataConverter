@@ -43,10 +43,10 @@ public class KeypadWindow extends JFrame {
 		btns.update(btns.getGraphics());
 		new Kensoft().jPanelXRight(btns.getX(), 0, 1, 4, btns);
 		if (theme == 0) {
-			btns.update(btns.getGraphics());
 			for (Component btn : btns.getComponents()) {
 				btn.setBackground(new Color(200, 200, 200));
 				btn.setForeground(Color.BLACK);
+				btn.update(btn.getGraphics());
 			}
 			SwingUtilities.updateComponentTreeUI(this);
 		}
