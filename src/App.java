@@ -1,6 +1,6 @@
 import java.lang.reflect.InvocationTargetException;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
-import com.formdev.flatlaf.themes.FlatMacDarkLaf;
+import com.formdev.flatlaf.FlatDarculaLaf;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.border.LineBorder;
 import java.lang.reflect.Method;
@@ -31,7 +31,7 @@ public class App extends JFrame {
         }
     });
     int prevOpt1Index = 0, prevOpt2Index = 0;
-    int theme = 0; // 0 - Light | 1 - Dark
+    static int theme = 0; // 0 - Light | 1 - Dark
 
     App() {
         setIconImage(new ImageIcon(getClass().getResource("icon.png")).getImage());
@@ -41,7 +41,7 @@ public class App extends JFrame {
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setDefaultLookAndFeelDecorated(false);
+        setDefaultLookAndFeelDecorated(true);
         mainOpt.addActionListener(event -> {
             menu1.setModel(new DefaultComboBoxModel<String>(options.get(mainOpt.getSelectedIndex()).toArray(new String[] {})));
             menu2.setModel(new DefaultComboBoxModel<String>(options.get(mainOpt.getSelectedIndex()).toArray(new String[] {})));
@@ -195,57 +195,47 @@ public class App extends JFrame {
     public void switchColor() {
         menu.setBounds(-getWidth(), menu.getY(), menu.getWidth(), menu.getHeight());
         new Kensoft().jPanelXRight(menu.getX(), 0, 1, 6, menu);
-        try {
-            // Light
-            if (theme == 0) {
-                switchBtn.setText("Dark Mode");
-                switchBtn.setIcon(new ImageIcon(getClass().getResource("dark.png")));
-                UIManager.setLookAndFeel(new FlatMacLightLaf());
-                getContentPane().setBackground(Color.LIGHT_GRAY);
-                title.setForeground(Color.BLACK);
-                mainOpt.setBorder(new LineBorder(Color.DARK_GRAY));
-                mainOpt.setBackground(new Color(200, 200, 200));
-                mainOpt.setForeground(Color.BLACK);
-                field1.setBackground(new Color(230, 230, 230));
-                for (int i = 66; i < 200; i++) {
-                    menu.setBackground(new Color(i, i, i));
-                    menu.update(menu.getGraphics());
-                }
-            }
-            // Dark
-            else if (theme == 1) {
-                switchBtn.setText("Light Mode");
-                switchBtn.setIcon(new ImageIcon(getClass().getResource("light.png")));
-                UIManager.setLookAndFeel(new FlatMacDarkLaf());
-                getContentPane().setBackground(new Color(66, 66, 66));
-                title.setForeground(Color.WHITE);
-                mainOpt.setBorder(new LineBorder(Color.BLACK));
-                mainOpt.setBackground(Color.DARK_GRAY);
-                mainOpt.setForeground(Color.WHITE);
-                field1.setBackground(mainOpt.getBackground());
-                for (int i = 200; i >= 66; i--) {
-                    menu.setBackground(new Color(i, i, i));
-                    menu.update(menu.getGraphics());
-                }
-            }
-            keypadWindow.switchTheme(theme);
-            mainPanel.setBackground(getContentPane().getBackground());
-            menu.setBorder(mainOpt.getBorder());
-            menu1.setBorder(mainOpt.getBorder());
-            menu2.setBorder(mainOpt.getBorder());
-            menu1.setBackground(mainOpt.getBackground());
-            menu2.setBackground(mainOpt.getBackground());
-            menu1.setForeground(mainOpt.getForeground());
-            menu2.setForeground(mainOpt.getForeground());
-            field1.setForeground(mainOpt.getForeground());
-            field2.setForeground(mainOpt.getForeground());
-            field2.setBackground(field1.getBackground());
-            keypadBtn.setForeground(mainOpt.getForeground());
-            switchBtn.setForeground(mainOpt.getForeground());
+        // Light
+        if (theme == 0) {
+            switchBtn.setText("Dark Mode");
+            switchBtn.setIcon(new ImageIcon(getClass().getResource("dark.png")));
+            FlatMacLightLaf.setup();
+            getContentPane().setBackground(Color.LIGHT_GRAY);
+            title.setForeground(Color.BLACK);
+            mainOpt.setBorder(new LineBorder(Color.DARK_GRAY));
+            mainOpt.setBackground(new Color(200, 200, 200));
+            mainOpt.setForeground(Color.BLACK);
+            field1.setBackground(new Color(230, 230, 230));
+            menu.setBackground(new Color(200, 200, 200));
         }
-        catch (UnsupportedLookAndFeelException e) {
-            return;
+        // Dark
+        else if (theme == 1) {
+            switchBtn.setText("Light Mode");
+            switchBtn.setIcon(new ImageIcon(getClass().getResource("light.png")));
+            FlatDarculaLaf.setup();
+            getContentPane().setBackground(new Color(66, 66, 66));
+            title.setForeground(Color.WHITE);
+            mainOpt.setBorder(new LineBorder(Color.BLACK));
+            mainOpt.setBackground(Color.DARK_GRAY);
+            mainOpt.setForeground(Color.WHITE);
+            field1.setBackground(mainOpt.getBackground());
+            menu.setBackground(new Color(66, 66, 66));
         }
+        keypadWindow.switchTheme(theme);
+        mainPanel.setBackground(getContentPane().getBackground());
+        menu.setBorder(mainOpt.getBorder());
+        menu1.setBorder(mainOpt.getBorder());
+        menu2.setBorder(mainOpt.getBorder());
+        menu1.setBackground(mainOpt.getBackground());
+        menu2.setBackground(mainOpt.getBackground());
+        menu1.setForeground(mainOpt.getForeground());
+        menu2.setForeground(mainOpt.getForeground());
+        field1.setForeground(mainOpt.getForeground());
+        field2.setForeground(mainOpt.getForeground());
+        field2.setBackground(field1.getBackground());
+        keypadBtn.setForeground(mainOpt.getForeground());
+        switchBtn.setForeground(mainOpt.getForeground());
+        SwingUtilities.updateComponentTreeUI(this);
     }
 
     public void keypadEvent(ActionEvent e) {
@@ -288,7 +278,7 @@ public class App extends JFrame {
             e.consume();
         else if (in == '0' && field1.getText().length() == 0)
             e.consume();
-        else if ((in >= '0' && in <= '9') || in == '.' || in == 'e') {
+        else if ((in >= '0' && in <= '9') || in == '.') {
             field1.setText(field1.getText().length() == 0 && (in == '.' || in == 'e') ? "0." : field1.getText() + in);
             updateInteraction();
         }
@@ -327,6 +317,8 @@ public class App extends JFrame {
     }
 
     public static void main(String... args) {
+        if (theme == 0) FlatMacLightLaf.setup();
+        else if (theme == 1) FlatDarculaLaf.setup();
         UIManager.put("ScrollBar.width", 25);
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
