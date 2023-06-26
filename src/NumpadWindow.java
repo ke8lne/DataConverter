@@ -11,7 +11,7 @@ import javax.swing.JPanel;
 import java.awt.Color;
 import java.awt.Font;
 
-public class KeypadWindow extends JFrame {
+public class NumpadWindow extends JFrame {
 	JPanel btns = new JPanel(new GridLayout(4, 3));
 
 	public void startWindow(ActionListener listener) {
@@ -60,7 +60,7 @@ public class KeypadWindow extends JFrame {
 		}
 	}
 
-	KeypadWindow(ActionListener listener) {
+	NumpadWindow(ActionListener listener) {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				startWindow(listener);

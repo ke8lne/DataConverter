@@ -1,6 +1,6 @@
 import java.lang.reflect.InvocationTargetException;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
-import com.formdev.flatlaf.FlatDarculaLaf;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.border.LineBorder;
 import java.lang.reflect.Method;
@@ -23,25 +23,51 @@ public class App extends JFrame {
     JTextField field1 = new JTextField();
     JTextField field2 = new JTextField();
     JLabel title = new JLabel("", SwingConstants.CENTER);
-    JButton keypadBtn = new JButton(new ImageIcon(getClass().getResource("numpad.png")));
-    JButton switchBtn = new JButton(), menuButton = new JButton(new ImageIcon(getClass().getResource("menu.png")));
-    KeypadWindow keypadWindow = new KeypadWindow(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-            keypadEvent(e);
-        }
-    });
+    Box box = Box.createHorizontalBox();
+    JButton keypadBtn = new JButton(new ImageIcon(getClass().getResource("assets/numpad.png")));
+    JButton switchBtn = new JButton(), menuButton = new JButton(new ImageIcon(getClass().getResource("assets/menu.png")));
+    NumpadWindow keypadWindow = new NumpadWindow(e -> inputType(e.getActionCommand() == "Del" ? '\b' : e.getActionCommand().charAt(0)));
     int prevOpt1Index = 0, prevOpt2Index = 0;
     static int theme = 0; // 0 - Light | 1 - Dark
 
     App() {
-        setIconImage(new ImageIcon(getClass().getResource("icon.png")).getImage());
+        setIconImage(new ImageIcon(getClass().getResource("assets/icon.png")).getImage());
         setTitle("DataConverter - Unit Convertion Tool");
         title.setText("Select a Unit:");
+        initEvents();
         setSize(400, 355);
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setDefaultLookAndFeelDecorated(true);
+        setFocusTraversalKeysEnabled(false);
+        menuAction();
+        switchColor();
+        setComponents();
+        field1.getActionMap().get(DefaultEditorKit.deletePrevCharAction).setEnabled(false);
+        field1.setEditable(false);
+        field1.setFocusable(true);
+        field1.requestFocus();
+        field2.setEditable(false);
+        field2.setFocusable(false);
+        mainPanel.add(mainOpt);
+        mainPanel.add(title, BorderLayout.CENTER);
+        mainPanel.add(box);
+        mainPanel.add(menu1);
+        mainPanel.add(field1);
+        mainPanel.add(menu2);
+        mainPanel.add(field2);
+        menu.add(keypadBtn);
+        menu.add(switchBtn);
+        add(menuButton);
+        add(mainPanel);
+        add(menu);
+        renderLabel();
+        setLayout(null);
+        setVisible(true);
+    }
+
+    void initEvents() {
         mainOpt.addActionListener(event -> {
             menu1.setModel(new DefaultComboBoxModel<String>(options.get(mainOpt.getSelectedIndex()).toArray(new String[] {})));
             menu2.setModel(new DefaultComboBoxModel<String>(options.get(mainOpt.getSelectedIndex()).toArray(new String[] {})));
@@ -49,6 +75,7 @@ public class App extends JFrame {
             field1.setText(null);
             field2.setText(null);
             field1.requestFocus();
+            renderLabel();
         });
         menu1.addItemListener(event -> {
             if (event.getStateChange() == ItemEvent.DESELECTED)
@@ -56,6 +83,7 @@ public class App extends JFrame {
             else if (event.getStateChange() == ItemEvent.SELECTED)
                 if (menu1.getSelectedIndex() == menu2.getSelectedIndex())
                     menu2.setSelectedIndex(prevOpt1Index);
+            renderLabel();
             updateInteraction();
             field1.requestFocus();
         });
@@ -65,19 +93,14 @@ public class App extends JFrame {
             else if (event.getStateChange() == ItemEvent.SELECTED)
                 if (menu2.getSelectedIndex() == menu1.getSelectedIndex())
                     menu1.setSelectedIndex(prevOpt2Index);
+            renderLabel();
             updateInteraction();
             field1.requestFocus();
         });
-        field1.getActionMap().get(DefaultEditorKit.deletePrevCharAction).setEnabled(false);
-        field1.setEditable(false);
-        field1.setFocusable(true);
-        field1.requestFocus();
-        field2.setEditable(false);
-        field2.setFocusable(false);
-        setFocusTraversalKeysEnabled(false);
         field1.addKeyListener(new KeyAdapter() {
             public void keyTyped(KeyEvent e) {
-                keyEvent(e);
+                if (!inputType(e.getKeyChar()))
+                    e.consume();
             }
         });
         addFocusListener(new FocusListener() {
@@ -85,7 +108,6 @@ public class App extends JFrame {
                 field1.requestFocus(true);
             }
 
-            @Override
             public void focusLost(FocusEvent e) {
                 field1.requestFocus(true);
             }
@@ -99,7 +121,8 @@ public class App extends JFrame {
             keypadWindow.setVisible(!keypadWindow.isVisible());
             keypadWindow.addKeyListener(new KeyAdapter() {
                 public void keyTyped(KeyEvent e) {
-                    keyEvent(e);
+                    if (!inputType(e.getKeyChar()))
+                        e.consume();
                 }
             });
             requestFocus(true);
@@ -109,22 +132,20 @@ public class App extends JFrame {
             switchColor();
         });
         menuButton.addActionListener(event -> menuAction());
-        menuAction();
-        switchColor();
-        setComponents();
-        mainPanel.add(mainOpt);
-        mainPanel.add(title, BorderLayout.CENTER);
-        mainPanel.add(menu1);
-        mainPanel.add(field1);
-        mainPanel.add(menu2);
-        mainPanel.add(field2);
-        menu.add(keypadBtn);
-        menu.add(switchBtn);
-        add(menuButton);
-        add(mainPanel);
-        add(menu);
-        setLayout(null);
-        setVisible(true);
+    }
+
+    void renderLabel() {
+        box.removeAll();
+        SwingUtilities.updateComponentTreeUI(this);
+        String iconPath = "assets/" + mainOptions.get(mainOpt.getSelectedIndex()).toLowerCase() + ".png";
+        JLabel img = new JLabel();
+        img.setIcon(new ImageIcon(getClass().getResource(iconPath)));
+        box.add(img);
+        box.add(new JLabel("  =  " + options.get(mainOpt.getSelectedIndex()).get(menu1.getSelectedIndex()) + " "));
+        JLabel arrow = new JLabel();
+        arrow.setIcon(new ImageIcon(getClass().getResource("assets/arrow.png")));
+        box.add(arrow);
+        box.add(new JLabel("  " + options.get(mainOpt.getSelectedIndex()).get(menu2.getSelectedIndex())));
     }
 
     public void setComponents() {
@@ -136,21 +157,23 @@ public class App extends JFrame {
         mainOpt.setMaximumRowCount(8);
         mainOpt.setBounds(40, 40, 300, 30);
         mainOpt.setRenderer(itemsRenderer);
+        box.setBounds(40, 90, 300, 30);
         menu1.setSelectedIndex(0);
         menu1.setMaximumRowCount(8);
-        menu1.setBounds(65, 100, 250, 30);
+        menu1.setBounds(65, 140, 250, 30);
         menu1.setRenderer(itemsRenderer);
         field1.setHorizontalAlignment(JTextField.CENTER);
         field1.setFont(font);
-        field1.setBounds(65, 133, 250, 40);
+        field1.setBounds(65, 173, 250, 40);
         menu2.setSelectedIndex(1);
         menu2.setMaximumRowCount(8);
-        menu2.setBounds(65, 190, 250, 30);
+        menu2.setBounds(65, 230, 250, 30);
         menu2.setRenderer(itemsRenderer);
         field2.setHorizontalAlignment(JTextField.CENTER);
         field2.setFont(font);
-        field2.setBounds(65, 223, 250, 40);
+        field2.setBounds(65, 263, 250, 40);
         keypadBtn.setText("Numpad");
+        keypadBtn.setToolTipText("Open a virtual numpad");
         keypadBtn.setBackground(null);
         keypadBtn.setFocusable(false);
         keypadBtn.setFocusPainted(false);
@@ -178,14 +201,16 @@ public class App extends JFrame {
             field2.setText(null);
             mainPanel.setBounds(mainPanel.getX(), -getHeight(), mainPanel.getWidth(), mainPanel.getHeight());
             new Kensoft().jPanelYDown(mainPanel.getY(), 0, 3, 5, mainPanel);
-            menuButton.setIcon(new ImageIcon(getClass().getResource("menu.png")));
+            menuButton.setToolTipText("Menu");
+            menuButton.setIcon(new ImageIcon(getClass().getResource("assets/menu.png")));
             menu.setVisible(false);
             mainPanel.setVisible(true);
         }
         else {
             menu.setBounds(menu.getX(), getHeight(), menu.getWidth(), menu.getHeight());
             new Kensoft().jPanelYUp(menu.getY(), 0, 3, 5, menu);
-            menuButton.setIcon(new ImageIcon(getClass().getResource("cancel.png")));
+            menuButton.setToolTipText("Back");
+            menuButton.setIcon(new ImageIcon(getClass().getResource("assets/cancel.png")));
             menu.setVisible(true);
             mainPanel.setVisible(false);
         }
@@ -198,7 +223,8 @@ public class App extends JFrame {
         // Light
         if (theme == 0) {
             switchBtn.setText("Dark Mode");
-            switchBtn.setIcon(new ImageIcon(getClass().getResource("dark.png")));
+            switchBtn.setToolTipText("Switch to Dark Mode Theme");
+            switchBtn.setIcon(new ImageIcon(getClass().getResource("assets/dark.png")));
             FlatMacLightLaf.setup();
             getContentPane().setBackground(Color.LIGHT_GRAY);
             title.setForeground(Color.BLACK);
@@ -211,8 +237,9 @@ public class App extends JFrame {
         // Dark
         else if (theme == 1) {
             switchBtn.setText("Light Mode");
-            switchBtn.setIcon(new ImageIcon(getClass().getResource("light.png")));
-            FlatDarculaLaf.setup();
+            switchBtn.setToolTipText("Switch to Light Mode Theme");
+            switchBtn.setIcon(new ImageIcon(getClass().getResource("assets/light.png")));
+            FlatMacDarkLaf.setup();
             getContentPane().setBackground(new Color(66, 66, 66));
             title.setForeground(Color.WHITE);
             mainOpt.setBorder(new LineBorder(Color.BLACK));
@@ -238,52 +265,36 @@ public class App extends JFrame {
         SwingUtilities.updateComponentTreeUI(this);
     }
 
-    public void keypadEvent(ActionEvent e) {
-        JButton btn = (JButton) e.getSource();
-        switch (btn.getText()) {
-        case "Del":
-            field1.setText(field1.getText().length() == 0 ? null : field1.getText().substring(0, (field1.getText().length() - 1)));
-            break;
-        case ".":
-            if (field1.getText().contains("."))
-                break;
-            else
-                field1.setText(field1.getText().length() == 0 ? "0." : field1.getText() + ".");
-            break;
-        default:
-            if (btn.getText() == "0" && field1.getText().length() == 0)
-                break;
-            field1.setText(field1.getText() + btn.getText());
-            break;
-        }
-        if (field1.getText().length() == 0)
-            field2.setText(null);
-        updateInteraction();
-    }
-
-    public void keyEvent(KeyEvent e) {
-        char in = e.getKeyChar();
-        if (in == KeyEvent.VK_ENTER) {
+    boolean inputType(char input) {
+        if (field1.getText().length() >= 20)
+            return false;
+        switch (input) {
+        case KeyEvent.VK_ENTER:
             updateInteraction();
-            e.consume();
-        }
-        else if (in == KeyEvent.VK_BACK_SPACE) {
+            return false;
+        case KeyEvent.VK_BACK_SPACE:
             field1.setText(field1.getText().length() == 0 ? null : field1.getText().substring(0, (field1.getText().length() - 1)));
             if (field1.getText().length() > 0)
                 updateInteraction();
             else if (field1.getText().length() == 0)
                 field2.setText(null);
+            break;
+        case '.':
+            if (field1.getText().contains("."))
+                return false;
+            break;
+        case '0':
+            if (field1.getText().length() == 0)
+                return false;
+            break;
         }
-        else if (in == '.' && field1.getText().contains("."))
-            e.consume();
-        else if (in == '0' && field1.getText().length() == 0)
-            e.consume();
-        else if ((in >= '0' && in <= '9') || in == '.') {
-            field1.setText(field1.getText().length() == 0 && (in == '.' || in == 'e') ? "0." : field1.getText() + in);
+        if ((input >= '0' && input <= '9') || input == '.') {
+            field1.setText(field1.getText().length() == 0 && (input == '.' || input == 'e') ? "0." : field1.getText() + input);
             updateInteraction();
         }
         else
-            e.consume();
+            return false;
+        return true;
     }
 
     public void updateInteraction() {
@@ -300,7 +311,8 @@ public class App extends JFrame {
             result = value;
         else
             result = convert(manager.converters[mainOptIndex], mainOptIndex, opt1, opt2, value);
-        field2.setText(new DecimalFormat("#,###.####################").format(result));
+        field2.setText(new DecimalFormat("#,###.###################").format(result));
+        renderLabel();
     }
 
     public double convert(Object converter, int converterIndex, int fromIndex, int toIndex, double value) {
@@ -317,8 +329,10 @@ public class App extends JFrame {
     }
 
     public static void main(String... args) {
-        if (theme == 0) FlatMacLightLaf.setup();
-        else if (theme == 1) FlatDarculaLaf.setup();
+        if (theme == 0)
+            FlatMacLightLaf.setup();
+        else if (theme == 1)
+            FlatMacDarkLaf.setup();
         UIManager.put("ScrollBar.width", 25);
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
