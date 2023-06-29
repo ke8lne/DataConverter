@@ -233,7 +233,8 @@ public class App extends JFrame {
     }
 
     void updateExpandedResults() {
-        if (!resultsPane.isVisible()) return;
+        if (!resultsPane.isVisible())
+            return;
         resultsPane.removeAll();
         List<String> items = new ArrayList<>();
         Double value = (field1.getText().length() > 0) ? Double.valueOf(field1.getText().trim().replaceAll(",", "")) : 0;
@@ -363,6 +364,8 @@ public class App extends JFrame {
             updateInteraction();
             return false;
         case KeyEvent.VK_BACK_SPACE:
+            if (field1.getText().length() > 0)
+                previousField.add(field1.getText());
             field1.setText(field1.getText().length() == 0 ? null : field1.getText().substring(0, (field1.getText().length() - 1)));
             if (field1.getText().length() > 0)
                 updateInteraction();
@@ -382,11 +385,13 @@ public class App extends JFrame {
             updateInteraction();
             return true;
         case 'C': // Clear
-            previousField.add("");
-            previousField.add(field1.getText());
-            field1.setText(null);
-            field2.setText(null);
-            updateExpandedResults();
+            if (field1.getText().length() > 0) {
+                previousField.add("");
+                previousField.add(field1.getText());
+                field1.setText(null);
+                field2.setText(null);
+                updateExpandedResults();
+            }
             return true;
         case '.':
             if (field1.getText().contains("."))
@@ -401,7 +406,6 @@ public class App extends JFrame {
                 return false;
             break;
         }
-        previousField.add(field1.getText());
         if ((input >= '0' && input <= '9') || input == '.' || input == '-') {
             field1.setText(field1.getText().length() == 0 && (input == '.') ? "0." : field1.getText() + input);
             updateInteraction();
