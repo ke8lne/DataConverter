@@ -1,13 +1,14 @@
 import java.awt.event.ActionListener;
 import javax.swing.SwingUtilities;
-import KentHipos.Kensoft;
 import java.awt.BorderLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import java.awt.GridLayout;
 import java.awt.Dimension;
 import java.awt.Component;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import KentHipos.Kensoft;
 import java.awt.Color;
 import java.awt.Font;
 
@@ -16,8 +17,8 @@ public class NumpadWindow extends JFrame {
 
 	public void startWindow(ActionListener listener) {
 		setTitle(null);
+		setIconImage(new ImageIcon(getClass().getResource("assets/numpad.png")).getImage());
 		setResizable(true);
-		setLocationRelativeTo(null);
 		setDefaultLookAndFeelDecorated(false);
 		setUndecorated(false);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -61,10 +62,6 @@ public class NumpadWindow extends JFrame {
 	}
 
 	NumpadWindow(ActionListener listener) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				startWindow(listener);
-			}
-		});
+		SwingUtilities.invokeLater(() -> new NumpadWindow(listener));
 	}
 }

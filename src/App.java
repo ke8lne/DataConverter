@@ -1,38 +1,40 @@
 import java.lang.reflect.InvocationTargetException;
-import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
-import javax.swing.text.DefaultEditorKit;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import javax.swing.border.LineBorder;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import javax.swing.text.*;
 import KentHipos.Kensoft;
 import java.awt.event.*;
 import java.util.List;
 import javax.swing.*;
 import java.awt.*;
 
+@SuppressWarnings("unchecked")
 public class App extends JFrame {
-    JPanel mainPanel = new JPanel(), menu = new JPanel(new GridLayout(5, 1));
+    JPanel mainPanel = new JPanel(), menu = new JPanel(new GridLayout(5, 1)), resultsPane = new JPanel(new BorderLayout(3, 3));
     Types manager = new Types();
-    List<String> mainOptions = manager.namesList;
-    List<List<String>> options = manager.typesList;
     Font font = new Font("Consolas", 1, 16);
-    JComboBox<String> mainOpt = new JComboBox<String>(mainOptions.toArray(new String[] {}));
+    JComboBox<String> mainOpt = new JComboBox<String>(manager.namesList.toArray(new String[] {}));
     JComboBox<String> menu1 = new JComboBox<String>();
     JComboBox<String> menu2 = new JComboBox<String>();
     JTextField field1 = new JTextField();
     JTextField field2 = new JTextField();
     JLabel title = new JLabel("", SwingConstants.CENTER);
-    Box box = Box.createHorizontalBox();
+    JTextPane box = new JTextPane();
     JButton keypadBtn = new JButton(new ImageIcon(getClass().getResource("assets/numpad.png")));
-    JButton switchBtn = new JButton(), menuButton = new JButton(new ImageIcon(getClass().getResource("assets/menu.png")));
+    JButton switchBtn = new JButton();
+    JButton menuButton = new JButton(new ImageIcon(getClass().getResource("assets/menu.png")));
+    JButton expandBtn = new JButton();
     NumpadWindow keypadWindow = new NumpadWindow(e -> inputType(e.getActionCommand() == "Del" ? '\b' : e.getActionCommand().charAt(0)));
     int prevOpt1Index = 0, prevOpt2Index = 0;
-    static int theme = 0; // 0 - Light | 1 - Dark
+    static int theme = 1; // 0 - Light | 1 - Dark
 
     App() {
         setIconImage(new ImageIcon(getClass().getResource("assets/icon.png")).getImage());
-        setTitle("DataConverter - Unit Convertion Tool");
+        setTitle("UnitConvert - Data Convertion Tool");
         title.setText("Select a Unit:");
         initEvents();
         setSize(400, 355);
@@ -44,12 +46,6 @@ public class App extends JFrame {
         menuAction();
         switchColor();
         setComponents();
-        field1.getActionMap().get(DefaultEditorKit.deletePrevCharAction).setEnabled(false);
-        field1.setEditable(false);
-        field1.setFocusable(true);
-        field1.requestFocus();
-        field2.setEditable(false);
-        field2.setFocusable(false);
         mainPanel.add(mainOpt);
         mainPanel.add(title, BorderLayout.CENTER);
         mainPanel.add(box);
@@ -57,23 +53,32 @@ public class App extends JFrame {
         mainPanel.add(field1);
         mainPanel.add(menu2);
         mainPanel.add(field2);
+        mainPanel.add(expandBtn);
         menu.add(keypadBtn);
         menu.add(switchBtn);
         add(menuButton);
         add(mainPanel);
         add(menu);
+        add(resultsPane);
         renderLabel();
         setLayout(null);
         setVisible(true);
     }
 
+    // Ignore the contents
     void initEvents() {
         mainOpt.addActionListener(event -> {
-            menu1.setModel(new DefaultComboBoxModel<String>(options.get(mainOpt.getSelectedIndex()).toArray(new String[] {})));
-            menu2.setModel(new DefaultComboBoxModel<String>(options.get(mainOpt.getSelectedIndex()).toArray(new String[] {})));
+            List<String> list = new ArrayList<>();
+            for (int i = 0; i < manager.typesList.get(mainOpt.getSelectedIndex()).size(); i++) {
+                String symbol = manager.symbolsList.get(mainOpt.getSelectedIndex()).get(i);
+                list.add(manager.typesList.get(mainOpt.getSelectedIndex()).get(i) + (symbol != null ? " (" + symbol + ")" : ""));
+            }
+            menu1.setModel(new DefaultComboBoxModel<String>(list.toArray(new String[] {})));
+            menu2.setModel(new DefaultComboBoxModel<String>(list.toArray(new String[] {})));
             menu2.setSelectedIndex(1);
             field1.setText(null);
             field2.setText(null);
+            updateExpandedResults();
             field1.requestFocus();
             renderLabel();
         });
@@ -82,20 +87,20 @@ public class App extends JFrame {
                 prevOpt1Index = manager.typesList.get(mainOpt.getSelectedIndex()).indexOf(event.getItem());
             else if (event.getStateChange() == ItemEvent.SELECTED)
                 if (menu1.getSelectedIndex() == menu2.getSelectedIndex())
-                    menu2.setSelectedIndex(prevOpt1Index);
-            renderLabel();
+                    menu2.setSelectedIndex(prevOpt1Index == -1 ? 0 : prevOpt1Index);
             updateInteraction();
             field1.requestFocus();
+            renderLabel();
         });
         menu2.addItemListener(event -> {
             if (event.getStateChange() == ItemEvent.DESELECTED)
                 prevOpt2Index = manager.typesList.get(mainOpt.getSelectedIndex()).indexOf(event.getItem());
             else if (event.getStateChange() == ItemEvent.SELECTED)
                 if (menu2.getSelectedIndex() == menu1.getSelectedIndex())
-                    menu1.setSelectedIndex(prevOpt2Index);
-            renderLabel();
+                    menu1.setSelectedIndex(prevOpt2Index == -1 ? 0 : prevOpt2Index);
             updateInteraction();
             field1.requestFocus();
+            renderLabel();
         });
         field1.addKeyListener(new KeyAdapter() {
             public void keyTyped(KeyEvent e) {
@@ -117,14 +122,14 @@ public class App extends JFrame {
                 field1.requestFocus();
             }
         });
+        keypadWindow.addKeyListener(new KeyAdapter() {
+            public void keyTyped(KeyEvent e) {
+                if (!inputType(e.getKeyChar()))
+                    e.consume();
+            }
+        });
         keypadBtn.addActionListener(event -> {
             keypadWindow.setVisible(!keypadWindow.isVisible());
-            keypadWindow.addKeyListener(new KeyAdapter() {
-                public void keyTyped(KeyEvent e) {
-                    if (!inputType(e.getKeyChar()))
-                        e.consume();
-                }
-            });
             requestFocus(true);
         });
         switchBtn.addActionListener(event -> {
@@ -132,24 +137,14 @@ public class App extends JFrame {
             switchColor();
         });
         menuButton.addActionListener(event -> menuAction());
+        expandBtn.addActionListener(event -> expandResults());
     }
 
-    void renderLabel() {
-        box.removeAll();
-        SwingUtilities.updateComponentTreeUI(this);
-        String iconPath = "assets/" + mainOptions.get(mainOpt.getSelectedIndex()).toLowerCase() + ".png";
-        JLabel img = new JLabel();
-        img.setIcon(new ImageIcon(getClass().getResource(iconPath)));
-        box.add(img);
-        box.add(new JLabel("  =  " + options.get(mainOpt.getSelectedIndex()).get(menu1.getSelectedIndex()) + " "));
-        JLabel arrow = new JLabel();
-        arrow.setIcon(new ImageIcon(getClass().getResource("assets/arrow.png")));
-        box.add(arrow);
-        box.add(new JLabel("  " + options.get(mainOpt.getSelectedIndex()).get(menu2.getSelectedIndex())));
-    }
-
+    // Ignore the contents
     public void setComponents() {
         DefaultListCellRenderer itemsRenderer = new DefaultListCellRenderer();
+        SimpleAttributeSet att = new SimpleAttributeSet();
+        StyleConstants.setAlignment(att, StyleConstants.ALIGN_CENTER);
         itemsRenderer.setHorizontalAlignment(DefaultListCellRenderer.CENTER);
         title.setFont(font);
         title.setBounds(40, 20, 300, 20);
@@ -158,20 +153,31 @@ public class App extends JFrame {
         mainOpt.setBounds(40, 40, 300, 30);
         mainOpt.setRenderer(itemsRenderer);
         box.setBounds(40, 90, 300, 30);
+        box.setFont(font);
+        box.setEditable(false);
+        box.setFocusable(false);
+        box.getStyledDocument().setParagraphAttributes(0, box.getStyledDocument().getLength(), att, false);
         menu1.setSelectedIndex(0);
         menu1.setMaximumRowCount(8);
-        menu1.setBounds(65, 140, 250, 30);
+        menu1.setBounds(55, 140, 270, 30);
         menu1.setRenderer(itemsRenderer);
-        field1.setHorizontalAlignment(JTextField.CENTER);
-        field1.setFont(font);
-        field1.setBounds(65, 173, 250, 40);
         menu2.setSelectedIndex(1);
         menu2.setMaximumRowCount(8);
-        menu2.setBounds(65, 230, 250, 30);
+        menu2.setBounds(55, 230, 270, 30);
         menu2.setRenderer(itemsRenderer);
+        field1.getActionMap().get(DefaultEditorKit.deletePrevCharAction).setEnabled(false);
+        field1.setEditable(false);
+        field1.setFocusable(true);
+        field1.setHorizontalAlignment(JTextField.CENTER);
+        field1.setFont(font);
+        field1.setBounds(55, 173, 270, 40);
+        field1.requestFocus();
+        field2.setEditable(false);
+        field2.setFocusable(false);
         field2.setHorizontalAlignment(JTextField.CENTER);
         field2.setFont(font);
-        field2.setBounds(65, 263, 250, 40);
+        field2.setBounds(55, 263, 270, 40);
+        keypadWindow.setLocation(getX() + getWidth(), getY());
         keypadBtn.setText("Numpad");
         keypadBtn.setToolTipText("Open a virtual numpad");
         keypadBtn.setBackground(null);
@@ -185,20 +191,104 @@ public class App extends JFrame {
         menuButton.setBorderPainted(false);
         menuButton.setFocusable(false);
         menuButton.setFocusPainted(false);
+        expandBtn.setIcon(new ImageIcon(getClass().getResource("assets/" + (resultsPane.isVisible() ? "right" : "left") + " arrow.png")));
+        expandBtn.setToolTipText((resultsPane.isVisible() ? "Expand" : "Close") + " Convertion Results");
+        expandBtn.setBackground(null);
+        expandBtn.setBounds(330, 225, 40, 40);
+        expandBtn.setBorderPainted(false);
+        expandBtn.setFocusable(false);
+        expandBtn.setFocusPainted(false);
         mainPanel.setLayout(null);
+        mainPanel.setBorder(null);
         mainPanel.setSize(getWidth(), getHeight());
         mainPanel.setVisible(true);
+        resultsPane.setBounds(385, 0, getWidth() - 200, getHeight() - 38);
+        resultsPane.setFocusable(false);
+        resultsPane.setBackground(getContentPane().getBackground());
+        mainPanel.setSize(getWidth() - 15, getHeight());
         menu.setSize(getWidth() - 15, getHeight());
         menu.setVisible(false);
+        mainPanel.setVisible(true);
+        resultsPane.setVisible(false);
         prevOpt1Index = menu1.getSelectedIndex();
         prevOpt2Index = menu2.getSelectedIndex();
+    }
+
+    void renderLabel() {
+        box.setText(null);
+        StyledDocument doc = box.getStyledDocument();
+        List<String> typeList = manager.typesList.get(mainOpt.getSelectedIndex());
+        try {
+            String iconPath = "assets/" + manager.namesList.get(mainOpt.getSelectedIndex()).toLowerCase() + ".png";
+            box.insertIcon(new ImageIcon(getClass().getResource(iconPath)));
+            String type1 = typeList.get(menu1.getSelectedIndex());
+            String type2 = typeList.get(menu2.getSelectedIndex());
+            String symbol1 = manager.symbolsList.get(mainOpt.getSelectedIndex()).get(menu1.getSelectedIndex());
+            String symbol2 = manager.symbolsList.get(mainOpt.getSelectedIndex()).get(menu2.getSelectedIndex());
+            doc.insertString(doc.getLength(), " = " + (symbol1 != null ? symbol1 : type1.length() > 7 ? "\"Unit_1\"" : type1) + " \u2192 " + (symbol2 != null ? symbol2 : type2.length() > 7 ? "\"Unit_2\"" : type2), null);
+        }
+        catch (BadLocationException | IndexOutOfBoundsException e) {}
+    }
+
+    void updateExpandedResults() {
+        resultsPane.removeAll();
+        List<String> items = new ArrayList<>();
+        if (field2.getText().length() > 0) {
+            Double value = Double.valueOf(field1.getText().trim().replaceAll(",", ""));
+            for (int i = 0; i < manager.typesList.get(mainOpt.getSelectedIndex()).size(); i++) {
+                Double result = convert(manager.converters[mainOpt.getSelectedIndex()], mainOpt.getSelectedIndex(), menu1.getSelectedIndex(), i, value);
+                String symbol = manager.symbolsList.get(mainOpt.getSelectedIndex()).get(i);
+                String item = "<html><b>" + (symbol != null ? "(" + symbol + ") " : "") + manager.typesList.get(mainOpt.getSelectedIndex()).get(i) + "</b><br>" + new DecimalFormat("#,###.###################").format(result)
+                        + "</html>";
+                items.add(item);
+            }
+        }
+        else
+            items.add("No value to convert.");
+        JList<String> list = new JList<String>(items.toArray(new String[] {}));
+        JScrollPane pane = new JScrollPane();
+        pane.setViewportView(list);
+        list.setLayoutOrientation(JList.VERTICAL);
+        list.setFocusable(false);
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        list.setSelectedIndex(menu2.getSelectedIndex());
+        list.setFont(new Font("Consolas", Font.BOLD, 10));
+        list.addListSelectionListener(e -> {
+            JList<String> obj = (JList<String>) e.getSource();
+            menu2.setSelectedIndex(obj.getSelectedIndex());
+            list.ensureIndexIsVisible(obj.getSelectedIndex());
+        });
+        list.ensureIndexIsVisible(menu2.getSelectedIndex());
+        list.setBorder(null);
+        resultsPane.add(pane);
+        SwingUtilities.updateComponentTreeUI(resultsPane);
+    }
+
+    void expandResults() {
+        if (resultsPane.isVisible()) {
+            resultsPane.setVisible(false);
+            int oldWidth = getWidth() - 200;
+            for (int i = getWidth(); i >= oldWidth; i -= 50) {
+                setSize(i, getHeight());
+                update(getGraphics());
+            }
+        }
+        else {
+            resultsPane.setVisible(true);
+            int doubledWidth = getWidth() + 250;
+            for (int i = getWidth(); i < doubledWidth; i += 50) {
+                setSize(i, getHeight());
+                update(getGraphics());
+            }
+            updateExpandedResults();
+        }
+        expandBtn.setIcon(new ImageIcon(getClass().getResource("assets/" + (resultsPane.isVisible() ? "left" : "right") + " arrow.png")));
+        expandBtn.setToolTipText((resultsPane.isVisible() ? "Close" : "Expand") + " Convertion Results");
     }
 
     public void menuAction() {
         // Visible
         if (menu.isVisible()) {
-            field1.setText(null);
-            field2.setText(null);
             mainPanel.setBounds(mainPanel.getX(), -getHeight(), mainPanel.getWidth(), mainPanel.getHeight());
             new Kensoft().jPanelYDown(mainPanel.getY(), 0, 3, 5, mainPanel);
             menuButton.setToolTipText("Menu");
@@ -249,7 +339,9 @@ public class App extends JFrame {
             menu.setBackground(new Color(66, 66, 66));
         }
         keypadWindow.switchTheme(theme);
+        box.setBackground(getContentPane().getBackground());
         mainPanel.setBackground(getContentPane().getBackground());
+        resultsPane.setBackground(getContentPane().getBackground());
         menu.setBorder(mainOpt.getBorder());
         menu1.setBorder(mainOpt.getBorder());
         menu2.setBorder(mainOpt.getBorder());
@@ -276,8 +368,10 @@ public class App extends JFrame {
             field1.setText(field1.getText().length() == 0 ? null : field1.getText().substring(0, (field1.getText().length() - 1)));
             if (field1.getText().length() > 0)
                 updateInteraction();
-            else if (field1.getText().length() == 0)
+            else if (field1.getText().length() == 0) {
                 field2.setText(null);
+                updateExpandedResults();
+            }
             break;
         case '.':
             if (field1.getText().contains("."))
@@ -311,20 +405,20 @@ public class App extends JFrame {
             result = value;
         else
             result = convert(manager.converters[mainOptIndex], mainOptIndex, opt1, opt2, value);
-        field2.setText(new DecimalFormat("#,###.###################").format(result));
+        String resultString = new DecimalFormat("#,###.###").format(result);
+        field2.setText((resultString.replaceAll("E0", "")));
+        updateExpandedResults();
         renderLabel();
     }
 
     public double convert(Object converter, int converterIndex, int fromIndex, int toIndex, double value) {
         double result = 0;
         try {
-            Method base = converter.getClass().getMethod("from" + options.get(converterIndex).get(fromIndex), double.class);
+            Method base = converter.getClass().getMethod("from" + manager.typesList.get(converterIndex).get(fromIndex), double.class);
             Object resolve = base.invoke(converter, value);
-            result = (double) resolve.getClass().getMethod("to" + options.get(converterIndex).get(toIndex)).invoke(resolve);
+            result = (double) resolve.getClass().getMethod("to" + manager.typesList.get(converterIndex).get(toIndex)).invoke(resolve);
         }
-        catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
-        }
+        catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {};
         return result;
     }
 
@@ -334,10 +428,6 @@ public class App extends JFrame {
         else if (theme == 1)
             FlatMacDarkLaf.setup();
         UIManager.put("ScrollBar.width", 25);
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                new App();
-            }
-        });
+        SwingUtilities.invokeLater(() -> new App());
     }
 }
