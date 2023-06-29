@@ -30,7 +30,7 @@ public class App extends JFrame {
     JButton expandBtn = new JButton();
     NumpadWindow keypadWindow = new NumpadWindow(e -> inputType(e.getActionCommand() == "Del" ? '\b' : e.getActionCommand().charAt(0)));
     int prevOpt1Index = 0, prevOpt2Index = 0;
-    String previousField = "";
+    List<String> previousField = new ArrayList<String>(25);
     static int theme = 1; // 0 - Light | 1 - Dark
 
     App() {
@@ -233,6 +233,7 @@ public class App extends JFrame {
     }
 
     void updateExpandedResults() {
+        if (!resultsPane.isVisible()) return;
         resultsPane.removeAll();
         List<String> items = new ArrayList<>();
         Double value = (field1.getText().length() > 0) ? Double.valueOf(field1.getText().trim().replaceAll(",", "")) : 0;
@@ -257,7 +258,6 @@ public class App extends JFrame {
             list.ensureIndexIsVisible(obj.getSelectedIndex());
         });
         list.ensureIndexIsVisible(menu2.getSelectedIndex());
-        list.setBorder(null);
         resultsPane.add(pane);
         SwingUtilities.updateComponentTreeUI(resultsPane);
     }
@@ -356,7 +356,7 @@ public class App extends JFrame {
     }
 
     boolean inputType(char input) {
-        if (field1.getText().length() >= 20)
+        if (field1.getText().length() >= 25 && !(input == KeyEvent.VK_BACK_SPACE || input == 'C' || input == 'U'))
             return false;
         switch (input) {
         case KeyEvent.VK_ENTER:
@@ -372,12 +372,18 @@ public class App extends JFrame {
             }
             break;
         case 'U': // Undo
-            if (previousField.length() > 0)
-                field1.setText(previousField);
+            if (previousField.size() > 0) {
+                String prevFIeld = previousField.remove(previousField.size() == 1 ? 0 : previousField.size() - 1);
+                field1.setText(prevFIeld);
+            }
+            if (field1.getText().length() == 0)
+                field2.setText(null);
+            updateExpandedResults();
             updateInteraction();
             return true;
         case 'C': // Clear
-            previousField = field1.getText();
+            previousField.add("");
+            previousField.add(field1.getText());
             field1.setText(null);
             field2.setText(null);
             updateExpandedResults();
@@ -395,7 +401,7 @@ public class App extends JFrame {
                 return false;
             break;
         }
-        previousField = field1.getText();
+        previousField.add(field1.getText());
         if ((input >= '0' && input <= '9') || input == '.' || input == '-') {
             field1.setText(field1.getText().length() == 0 && (input == '.') ? "0." : field1.getText() + input);
             updateInteraction();
