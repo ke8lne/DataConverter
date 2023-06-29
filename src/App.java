@@ -28,7 +28,7 @@ public class App extends JFrame {
     JButton switchBtn = new JButton();
     JButton menuButton = new JButton(new ImageIcon(getClass().getResource("assets/menu.png")));
     JButton expandBtn = new JButton();
-    NumpadWindow keypadWindow = new NumpadWindow(e -> inputType(e.getActionCommand() == "Del" ? '\b' : e.getActionCommand().charAt(0)));
+    NumpadWindow keypadWindow = new NumpadWindow(e -> inputType(e.getActionCommand() == "\u232B" ? '\b' : e.getActionCommand().charAt(0)));
     int prevOpt1Index = 0, prevOpt2Index = 0;
     List<String> previousField = new ArrayList<String>(25);
     static int theme = 1; // 0 - Light | 1 - Dark

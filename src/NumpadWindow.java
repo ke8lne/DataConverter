@@ -21,19 +21,19 @@ public class NumpadWindow extends JFrame {
 		setResizable(true);
 		setDefaultLookAndFeelDecorated(false);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setSize(226, 355);
+		setSize(250, 355);
 		setMinimumSize(getSize());
 		setMaximumSize(new Dimension(500, 600)); // - Buggy Method
 		setLayout(new BorderLayout());
 		String keys[] = {
-				"Undo", "Clear", "-", "7", "8", "9", "4", "5", "6", "1", "2", "3", "0", ".", "Del"
+				"Undo", "Clear", "-", "7", "8", "9", "4", "5", "6", "1", "2", "3", "0", ".", "\u232B"
 		};
 		for (int i = 0; i < keys.length; i++) {
 			JButton btn = new JButton(keys[i]);
 			if (keys[i].length() == 0) btn.setEnabled(false);
 			btn.setFocusable(false);
 			btn.addActionListener(listener);
-			btn.setFont(new Font("Calibri", 1, 15));
+			btn.setFont(new Font("Comic Sans", 1, 15));
 			btns.add(btn);
 		}
 		add(btns, BorderLayout.CENTER);
