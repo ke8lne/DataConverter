@@ -13,24 +13,24 @@ import java.awt.Color;
 import java.awt.Font;
 
 public class NumpadWindow extends JFrame {
-	JPanel btns = new JPanel(new GridLayout(4, 3));
+	JPanel btns = new JPanel(new GridLayout(5, 3));
 
 	public void startWindow(ActionListener listener) {
 		setTitle(null);
 		setIconImage(new ImageIcon(getClass().getResource("assets/numpad.png")).getImage());
 		setResizable(true);
 		setDefaultLookAndFeelDecorated(false);
-		setUndecorated(false);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setSize(226, 300);
+		setSize(226, 355);
 		setMinimumSize(getSize());
 		setMaximumSize(new Dimension(500, 600)); // - Buggy Method
 		setLayout(new BorderLayout());
 		String keys[] = {
-				"7", "8", "9", "4", "5", "6", "1", "2", "3", "0", ".", "Del"
+				"Undo", "Clear", "-", "7", "8", "9", "4", "5", "6", "1", "2", "3", "0", ".", "Del"
 		};
-		for (int i = 0; i < 12; i++) {
+		for (int i = 0; i < keys.length; i++) {
 			JButton btn = new JButton(keys[i]);
+			if (keys[i].length() == 0) btn.setEnabled(false);
 			btn.setFocusable(false);
 			btn.addActionListener(listener);
 			btn.setFont(new Font("Calibri", 1, 15));
@@ -62,6 +62,6 @@ public class NumpadWindow extends JFrame {
 	}
 
 	NumpadWindow(ActionListener listener) {
-		SwingUtilities.invokeLater(() -> new NumpadWindow(listener));
+		SwingUtilities.invokeLater(() -> startWindow(listener));
 	}
 }

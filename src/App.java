@@ -30,6 +30,7 @@ public class App extends JFrame {
     JButton expandBtn = new JButton();
     NumpadWindow keypadWindow = new NumpadWindow(e -> inputType(e.getActionCommand() == "Del" ? '\b' : e.getActionCommand().charAt(0)));
     int prevOpt1Index = 0, prevOpt2Index = 0;
+    String previousField = "";
     static int theme = 1; // 0 - Light | 1 - Dark
 
     App() {
@@ -370,8 +371,23 @@ public class App extends JFrame {
                 updateExpandedResults();
             }
             break;
+        case 'U': // Undo
+            if (previousField.length() > 0)
+                field1.setText(previousField);
+            updateInteraction();
+            return true;
+        case 'C': // Clear
+            previousField = field1.getText();
+            field1.setText(null);
+            field2.setText(null);
+            updateExpandedResults();
+            return true;
         case '.':
             if (field1.getText().contains("."))
+                return false;
+            break;
+        case '-':
+            if (field1.getText().contains("-") || field1.getText().length() > 0)
                 return false;
             break;
         case '0':
@@ -379,8 +395,9 @@ public class App extends JFrame {
                 return false;
             break;
         }
-        if ((input >= '0' && input <= '9') || input == '.') {
-            field1.setText(field1.getText().length() == 0 && (input == '.' || input == 'e') ? "0." : field1.getText() + input);
+        previousField = field1.getText();
+        if ((input >= '0' && input <= '9') || input == '.' || input == '-') {
+            field1.setText(field1.getText().length() == 0 && (input == '.') ? "0." : field1.getText() + input);
             updateInteraction();
         }
         else
