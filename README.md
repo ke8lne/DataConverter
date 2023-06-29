@@ -1,2 +1,6 @@
-# Unit Converter
-## A Data Converter Tool made in Java
+# ****Unit Converter**** - Data Converter Tool Made in Java.
+
+## How to Run:
+```sh
+java --enable-preview -jar ./UnitConverter.jar
+```
