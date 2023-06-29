@@ -227,24 +227,21 @@ public class App extends JFrame {
             String symbol2 = manager.symbolsList.get(mainOpt.getSelectedIndex()).get(menu2.getSelectedIndex());
             doc.insertString(doc.getLength(), " = " + (symbol1 != null ? symbol1 : type1.length() > 7 ? "\"Unit_1\"" : type1) + " \u2192 " + (symbol2 != null ? symbol2 : type2.length() > 7 ? "\"Unit_2\"" : type2), null);
         }
-        catch (BadLocationException | IndexOutOfBoundsException e) {}
+        catch (BadLocationException | IndexOutOfBoundsException e) {
+        }
     }
 
     void updateExpandedResults() {
         resultsPane.removeAll();
         List<String> items = new ArrayList<>();
-        if (field2.getText().length() > 0) {
-            Double value = Double.valueOf(field1.getText().trim().replaceAll(",", ""));
-            for (int i = 0; i < manager.typesList.get(mainOpt.getSelectedIndex()).size(); i++) {
-                Double result = convert(manager.converters[mainOpt.getSelectedIndex()], mainOpt.getSelectedIndex(), menu1.getSelectedIndex(), i, value);
-                String symbol = manager.symbolsList.get(mainOpt.getSelectedIndex()).get(i);
-                String item = "<html><b>" + (symbol != null ? "(" + symbol + ") " : "") + manager.typesList.get(mainOpt.getSelectedIndex()).get(i) + "</b><br>" + new DecimalFormat("#,###.###################").format(result)
-                        + "</html>";
-                items.add(item);
-            }
+        Double value = (field1.getText().length() > 0) ? Double.valueOf(field1.getText().trim().replaceAll(",", "")) : 0;
+        for (int i = 0; i < manager.typesList.get(mainOpt.getSelectedIndex()).size(); i++) {
+            Double result = convert(manager.converters[mainOpt.getSelectedIndex()], mainOpt.getSelectedIndex(), menu1.getSelectedIndex(), i, value);
+            String symbol = manager.symbolsList.get(mainOpt.getSelectedIndex()).get(i);
+            String item = "<html><b>" + (symbol != null ? "(" + symbol + ") " : "") + manager.typesList.get(mainOpt.getSelectedIndex()).get(i) + "</b><br>" + new DecimalFormat("#,###.###################").format(result)
+                    + "</html>";
+            items.add(item);
         }
-        else
-            items.add("No value to convert.");
         JList<String> list = new JList<String>(items.toArray(new String[] {}));
         JScrollPane pane = new JScrollPane();
         pane.setViewportView(list);
@@ -418,7 +415,8 @@ public class App extends JFrame {
             Object resolve = base.invoke(converter, value);
             result = (double) resolve.getClass().getMethod("to" + manager.typesList.get(converterIndex).get(toIndex)).invoke(resolve);
         }
-        catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {};
+        catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        } ;
         return result;
     }
 
