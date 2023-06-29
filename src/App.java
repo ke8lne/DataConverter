@@ -237,7 +237,13 @@ public class App extends JFrame {
             return;
         resultsPane.removeAll();
         List<String> items = new ArrayList<>();
-        Double value = (field1.getText().length() > 0) ? Double.valueOf(field1.getText().trim().replaceAll(",", "")) : 0;
+        Double value = 0.0;
+        try {
+            value = (field1.getText().length() > 0) ? Double.valueOf(field1.getText().trim().replaceAll(",", "")) : 0;
+        }
+        catch (NumberFormatException e) {
+            value = 0.0;
+        } ;
         for (int i = 0; i < manager.typesList.get(mainOpt.getSelectedIndex()).size(); i++) {
             Double result = convert(manager.converters[mainOpt.getSelectedIndex()], mainOpt.getSelectedIndex(), menu1.getSelectedIndex(), i, value);
             String symbol = manager.symbolsList.get(mainOpt.getSelectedIndex()).get(i);
@@ -371,8 +377,8 @@ public class App extends JFrame {
                 updateInteraction();
             else if (field1.getText().length() == 0) {
                 field2.setText(null);
-                updateExpandedResults();
             }
+            updateExpandedResults();
             break;
         case 'U': // Undo
             if (previousField.size() > 0) {
