@@ -1,9 +1,9 @@
+import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 import java.lang.reflect.InvocationTargetException;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import javax.swing.border.LineBorder;
 import java.lang.reflect.Method;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import javax.swing.text.*;
 import KentHipos.Kensoft;
@@ -17,17 +17,12 @@ public class App extends JFrame {
     JPanel mainPanel = new JPanel(), menu = new JPanel(new GridLayout(5, 1)), resultsPane = new JPanel(new BorderLayout(3, 3));
     Types manager = new Types();
     Font font = new Font("Consolas", 1, 16);
-    JComboBox<String> mainOpt = new JComboBox<String>(manager.namesList.toArray(new String[] {}));
-    JComboBox<String> menu1 = new JComboBox<String>();
-    JComboBox<String> menu2 = new JComboBox<String>();
-    JTextField field1 = new JTextField();
-    JTextField field2 = new JTextField();
+    JComboBox<String> mainOpt = new JComboBox<String>(manager.namesList.toArray(new String[] {})), menu1 = new JComboBox<String>(), menu2 = new JComboBox<String>();
+    JTextField field1 = new JTextField(), field2 = new JTextField();
     JLabel title = new JLabel("", SwingConstants.CENTER);
     JTextPane box = new JTextPane();
-    JButton keypadBtn = new JButton(new ImageIcon(getClass().getResource("assets/numpad.png")));
-    JButton switchBtn = new JButton();
-    JButton menuButton = new JButton(new ImageIcon(getClass().getResource("assets/menu.png")));
-    JButton expandBtn = new JButton();
+    JButton keypadBtn = new JButton(new ImageIcon(getClass().getResource("assets/numpad.png"))), switchBtn = new JButton(), expandBtn = new JButton(),
+            menuButton = new JButton(new ImageIcon(getClass().getResource("assets/menu.png"))), reverseBtn = new JButton(new ImageIcon(getClass().getResource("assets/reverse.png")));
     NumpadWindow keypadWindow = new NumpadWindow(e -> inputType(e.getActionCommand() == "\u232B" ? '\b' : e.getActionCommand().charAt(0)));
     int prevOpt1Index = 0, prevOpt2Index = 0;
     List<String> previousField = new ArrayList<String>(25);
@@ -50,10 +45,13 @@ public class App extends JFrame {
         mainPanel.add(mainOpt);
         mainPanel.add(title, BorderLayout.CENTER);
         mainPanel.add(box);
+        AutoCompleteDecorator.decorate(menu1);
         mainPanel.add(menu1);
         mainPanel.add(field1);
+        AutoCompleteDecorator.decorate(menu2);
         mainPanel.add(menu2);
         mainPanel.add(field2);
+        mainPanel.add(reverseBtn);
         mainPanel.add(expandBtn);
         menu.add(keypadBtn);
         menu.add(switchBtn);
@@ -129,16 +127,23 @@ public class App extends JFrame {
                     e.consume();
             }
         });
-        keypadBtn.addActionListener(event -> {
+        keypadBtn.addActionListener(e -> {
             keypadWindow.setVisible(!keypadWindow.isVisible());
             requestFocus(true);
         });
-        switchBtn.addActionListener(event -> {
+        switchBtn.addActionListener(e -> {
             theme = theme == 0 ? 1 : 0;
             switchColor();
         });
-        menuButton.addActionListener(event -> menuAction());
-        expandBtn.addActionListener(event -> expandResults());
+        menuButton.addActionListener(e -> menuAction());
+        expandBtn.addActionListener(e -> expandResults());
+        reverseBtn.addActionListener(e -> {
+            int oldMenu1 = menu1.getSelectedIndex(), oldMenu2 = menu2.getSelectedIndex();
+            menu1.setSelectedIndex(oldMenu2);
+            menu2.setSelectedIndex(oldMenu1);
+            updateInteraction();
+            updateExpandedResults();
+        });
     }
 
     // Ignore the contents
@@ -192,6 +197,12 @@ public class App extends JFrame {
         menuButton.setBorderPainted(false);
         menuButton.setFocusable(false);
         menuButton.setFocusPainted(false);
+        reverseBtn.setToolTipText("Change Unit");
+        reverseBtn.setBackground(null);
+        reverseBtn.setBounds(330, 180, 40, 40);
+        reverseBtn.setBorderPainted(false);
+        reverseBtn.setFocusable(false);
+        reverseBtn.setFocusPainted(false);
         expandBtn.setIcon(new ImageIcon(getClass().getResource("assets/" + (resultsPane.isVisible() ? "right" : "left") + " arrow.png")));
         expandBtn.setToolTipText((resultsPane.isVisible() ? "Expand" : "Close") + " Convertion Results");
         expandBtn.setBackground(null);
@@ -247,8 +258,7 @@ public class App extends JFrame {
         for (int i = 0; i < manager.typesList.get(mainOpt.getSelectedIndex()).size(); i++) {
             Double result = convert(manager.converters[mainOpt.getSelectedIndex()], mainOpt.getSelectedIndex(), menu1.getSelectedIndex(), i, value);
             String symbol = manager.symbolsList.get(mainOpt.getSelectedIndex()).get(i);
-            String item = "<html><b>" + (symbol != null ? "(" + symbol + ") " : "") + manager.typesList.get(mainOpt.getSelectedIndex()).get(i) + "</b><br>" + new DecimalFormat("#,###.###################").format(result)
-                    + "</html>";
+            String item = "<html><b>" + (symbol != null ? "(" + symbol + ") " : "") + manager.typesList.get(mainOpt.getSelectedIndex()).get(i) + "</b><br>" + String.valueOf(result) + "</html>";
             items.add(item);
         }
         JList<String> list = new JList<String>(items.toArray(new String[] {}));
@@ -271,20 +281,20 @@ public class App extends JFrame {
 
     void expandResults() {
         if (resultsPane.isVisible()) {
-            resultsPane.setVisible(false);
             int oldWidth = getWidth() - 200;
+            resultsPane.setVisible(false);
             for (int i = getWidth(); i >= oldWidth; i -= 50) {
                 setSize(i, getHeight());
                 update(getGraphics());
             }
         }
         else {
-            resultsPane.setVisible(true);
             int doubledWidth = getWidth() + 250;
             for (int i = getWidth(); i < doubledWidth; i += 50) {
                 setSize(i, getHeight());
                 update(getGraphics());
             }
+            resultsPane.setVisible(true);
             updateExpandedResults();
         }
         expandBtn.setIcon(new ImageIcon(getClass().getResource("assets/" + (resultsPane.isVisible() ? "left" : "right") + " arrow.png")));
@@ -375,9 +385,8 @@ public class App extends JFrame {
             field1.setText(field1.getText().length() == 0 ? null : field1.getText().substring(0, (field1.getText().length() - 1)));
             if (field1.getText().length() > 0)
                 updateInteraction();
-            else if (field1.getText().length() == 0) {
+            else if (field1.getText().length() == 0)
                 field2.setText(null);
-            }
             updateExpandedResults();
             break;
         case 'U': // Undo
@@ -435,7 +444,7 @@ public class App extends JFrame {
             result = value;
         else
             result = convert(manager.converters[mainOptIndex], mainOptIndex, opt1, opt2, value);
-        String resultString = new DecimalFormat("#,###.###").format(result);
+        String resultString = String.valueOf(result);
         field2.setText((resultString.replaceAll("E0", "")));
         updateExpandedResults();
         renderLabel();
